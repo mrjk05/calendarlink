@@ -2,134 +2,256 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Google Calendar Link Generator</title>
+    <!-- Chota CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/chota">
+    <!-- Flatpickr CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <style>
+        :root {
+            --grid-maxWidth: 600px;
+            --color-primary: #4CAF50;
+            --spacing-unit: 1rem;
+        }
+        
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #1a1a1a;
+                --bg-secondary-color: #2d2d2d;
+                --font-color: #ffffff;
+            }
+            .flatpickr-calendar {
+                background: var(--bg-secondary-color);
+                color: var(--font-color);
+            }
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            max-width: 400px;
-            margin: 20px auto;
-            padding: 20px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: var(--spacing-unit) 0;
         }
-        input, button {
+
+        .container {
+            padding: calc(var(--spacing-unit) * 2);
             width: 100%;
-            margin-bottom: 10px;
-            padding: 10px;
-            box-sizing: border-box;
         }
-        .alert {
+
+        .card {
+            padding: calc(var(--spacing-unit) * 1.5);
+            border-radius: 12px;
+        }
+
+        h4 {
+            margin: 0 0 calc(var(--spacing-unit) * 1.5) 0;
+            font-size: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: calc(var(--spacing-unit) * 1.25);
+        }
+
+        label {
+            display: block;
+            margin-bottom: calc(var(--spacing-unit) * 0.5);
+            font-weight: 500;
+        }
+
+        .flatpickr-input {
+            background: var(--bg-color);
+            color: var(--font-color);
+            cursor: pointer;
+            transition: border-color 0.2s ease;
+        }
+
+        .flatpickr-input:hover {
+            border-color: var(--color-primary);
+        }
+
+        button.button {
+            margin-top: var(--spacing-unit);
+            padding: calc(var(--spacing-unit) * 0.75);
+            font-weight: 600;
+            transition: transform 0.1s ease;
+        }
+
+        button.button:active {
+            transform: scale(0.98);
+        }
+
+        #alert {
             position: fixed;
-            top: 20px;
+            bottom: 1rem;
             left: 50%;
             transform: translateX(-50%);
-            padding: 15px 25px;
-            background: #4CAF50;
-            color: white;
-            border-radius: 4px;
-            opacity: 0;
-            transition: opacity 0.3s;
-            pointer-events: none;
             z-index: 1000;
+            max-width: 90%;
+            width: max-content;
+            padding: calc(var(--spacing-unit) * 0.75) calc(var(--spacing-unit) * 1.5);
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            opacity: 0;
+            pointer-events: none;
         }
-        .alert.show {
+
+        #alert.show {
             opacity: 1;
         }
-        .alert.error {
-            background: #f44336;
+
+        .input-group {
+            display: flex;
+            gap: calc(var(--spacing-unit) * 0.5);
+            margin-top: calc(var(--spacing-unit) * 1.5);
         }
+
         #link-display {
-            width: 100%;
-            margin-top: 10px;
-            padding: 10px;
-            box-sizing: border-box;
-            word-break: break-all;
-            display: none;
+            flex: 1;
+            min-width: 0;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: var(--spacing-unit);
+            }
+
+            h4 {
+                font-size: 1.3rem;
+            }
+
+            .flatpickr-calendar {
+                max-width: 95vw;
+            }
+
+            button.button {
+                width: 100%;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+
+            .input-group button {
+                width: 100%;
+                border-radius: 4px;
+            }
         }
     </style>
 </head>
 <body>
-    <input type="text" id="title" placeholder="Event Title" required>
-    <input type="datetime-local" id="start" required>
-    <input type="datetime-local" id="end" required>
-    <button onclick="generateLink()">Generate Calendar Link</button>
-    <input type="text" id="link-display" readonly placeholder="Generated link will appear here">
-    
-    <!-- Notification element -->
-    <div id="alert" class="alert"></div>
+    <div class="container">
+        <div class="card">
+            <h4 class="text-center">📅 Calendar Link Generator</h4>
+            
+            <div class="form-group">
+                <label for="title">Event Title</label>
+                <input type="text" id="title" class="form-control" placeholder="Meeting with team" required>
+            </div>
 
+            <div class="form-group">
+                <label for="start">Start Time</label>
+                <input type="text" id="start" class="form-control flatpickr-input" placeholder="Select Date & Time" readonly>
+            </div>
+
+            <div class="form-group">
+                <label for="end">End Time</label>
+                <input type="text" id="end" class="form-control flatpickr-input" placeholder="Select Date & Time" readonly>
+            </div>
+
+            <button class="button primary full-width" onclick="generateLink()">
+                Generate Link
+            </button>
+
+            <div class="input-group">
+                <input type="text" id="link-display" class="form-control" readonly placeholder="Generated link will appear here">
+                <button class="button outline" onclick="copyLink()">
+                    Copy
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="alert" class="card"></div>
+
+    <!-- Flatpickr JS -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
+    // Initialize Flatpickr with mobile-friendly config
+    const dateConfig = {
+        enableTime: true,
+        dateFormat: "Y-m-d H:i",
+        time_24hr: true,
+        minuteIncrement: 15,
+        minDate: "today",
+        static: true,
+        position: 'below',
+        disableMobile: false,
+        locale: {
+            firstDayOfWeek: 1
+        }
+    };
+
+    const startPicker = flatpickr("#start", {
+        ...dateConfig,
+        onChange: function(selectedDates, dateStr) {
+            endPicker.set('minDate', dateStr);
+            if (endPicker.selectedDates[0] < selectedDates[0]) {
+                endPicker.setDate(dateStr);
+            }
+        }
+    });
+
+    const endPicker = flatpickr("#end", dateConfig);
+
+    // Rest of the JavaScript remains the same
     function generateLink() {
         const title = document.getElementById('title').value.trim();
         const start = document.getElementById('start').value;
         const end = document.getElementById('end').value;
         const linkDisplay = document.getElementById('link-display');
 
-        // Validate inputs
-        if (!title) {
-            showAlert('Please enter an event title', true);
-            return;
-        }
-        if (!start) {
-            showAlert('Please select a start date and time', true);
-            return;
-        }
-        if (!end) {
-            showAlert('Please select an end date and time', true);
-            return;
-        }
-        
-        // Validate that end time is after start time
-        const startTime = new Date(start);
-        const endTime = new Date(end);
-        if (endTime <= startTime) {
-            showAlert('End time must be after start time', true);
+        if (!title || !start || !end) {
+            showAlert('Please fill all required fields', 'error');
             return;
         }
 
-        // Format dates to Google's required format (YYYYMMDDTHHmmss)
+        const startTime = new Date(start);
+        const endTime = new Date(end);
+        if (endTime <= startTime) {
+            showAlert('End time must be after start time', 'error');
+            return;
+        }
+
         const formatDate = (dateString) => {
             const date = new Date(dateString);
             return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
         };
 
-        const startDate = formatDate(start);
-        const endDate = formatDate(end);
-
-        // Create the URL
-        const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${startDate}/${endDate}`;
+        const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${formatDate(start)}/${formatDate(end)}`;
         
-        // Update input field with link
         linkDisplay.value = url;
-        linkDisplay.style.display = 'block';
-
-        // Attempt to copy to clipboard
-        try {
-            navigator.clipboard.writeText(url).then(() => {
-                showAlert('Link copied to clipboard!');
-            }).catch(err => {
-                console.error('Clipboard write failed:', err);
-                showAlert('Unable to automatically copy. Please manually copy the link.', true);
-            });
-        } catch (err) {
-            console.error('Clipboard error:', err);
-            showAlert('Clipboard access failed. Please manually copy the link.', true);
-        }
+        copyToClipboard(url);
     }
 
-    function showAlert(message, isError = false) {
+    function copyLink() {
+        const link = document.getElementById('link-display').value;
+        if (link) copyToClipboard(link);
+    }
+
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(() => {
+            showAlert('Link copied to clipboard!', 'success');
+        }).catch(() => {
+            showAlert('Failed to copy. Please copy manually.', 'warning');
+        });
+    }
+
+    function showAlert(message, type = 'success') {
         const alert = document.getElementById('alert');
+        alert.className = `card show bg-${type} text-white`;
         alert.textContent = message;
         
-        // Remove existing classes
-        alert.classList.remove('show', 'error');
-        
-        // Add appropriate classes
-        alert.classList.add('show');
-        if (isError) {
-            alert.classList.add('error');
-        }
-        
-        // Hide after 3 seconds
         setTimeout(() => {
             alert.classList.remove('show');
         }, 3000);
