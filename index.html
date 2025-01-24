@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Google Calendar Link Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 400px;
+            margin: 20px auto;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        input, button {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        .alert {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 15px 25px;
+            background: #4CAF50;
+            color: white;
+            border-radius: 4px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        .alert.show {
+            opacity: 1;
+        }
+        .alert.error {
+            background: #f44336;
+        }
+        #link-display {
+            width: 100%;
+            margin-top: 10px;
+            padding: 10px;
+            box-sizing: border-box;
+            word-break: break-all;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <input type="text" id="title" placeholder="Event Title" required>
+    <input type="datetime-local" id="start" required>
+    <input type="datetime-local" id="end" required>
+    <button onclick="generateLink()">Generate Calendar Link</button>
+    <input type="text" id="link-display" readonly placeholder="Generated link will appear here">
+    
+    <!-- Notification element -->
+    <div id="alert" class="alert"></div>
+
+    <script>
+    function generateLink() {
+        const title = document.getElementById('title').value.trim();
+        const start = document.getElementById('start').value;
+        const end = document.getElementById('end').value;
+        const linkDisplay = document.getElementById('link-display');
+
+        // Validate inputs
+        if (!title) {
+            showAlert('Please enter an event title', true);
+            return;
+        }
+        if (!start) {
+            showAlert('Please select a start date and time', true);
+            return;
+        }
+        if (!end) {
+            showAlert('Please select an end date and time', true);
+            return;
+        }
+        
+        // Validate that end time is after start time
+        const startTime = new Date(start);
+        const endTime = new Date(end);
+        if (endTime <= startTime) {
+            showAlert('End time must be after start time', true);
+            return;
+        }
+
+        // Format dates to Google's required format (YYYYMMDDTHHmmss)
+        const formatDate = (dateString) => {
+            const date = new Date(dateString);
+            return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+        };
+
+        const startDate = formatDate(start);
+        const endDate = formatDate(end);
+
+        // Create the URL
+        const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${startDate}/${endDate}`;
+        
+        // Update input field with link
+        linkDisplay.value = url;
+        linkDisplay.style.display = 'block';
+
+        // Attempt to copy to clipboard
+        try {
+            navigator.clipboard.writeText(url).then(() => {
+                showAlert('Link copied to clipboard!');
+            }).catch(err => {
+                console.error('Clipboard write failed:', err);
+                showAlert('Unable to automatically copy. Please manually copy the link.', true);
+            });
+        } catch (err) {
+            console.error('Clipboard error:', err);
+            showAlert('Clipboard access failed. Please manually copy the link.', true);
+        }
+    }
+
+    function showAlert(message, isError = false) {
+        const alert = document.getElementById('alert');
+        alert.textContent = message;
+        
+        // Remove existing classes
+        alert.classList.remove('show', 'error');
+        
+        // Add appropriate classes
+        alert.classList.add('show');
+        if (isError) {
+            alert.classList.add('error');
+        }
+        
+        // Hide after 3 seconds
+        setTimeout(() => {
+            alert.classList.remove('show');
+        }, 3000);
+    }
+    </script>
+</body>
+</html>
